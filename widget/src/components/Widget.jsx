@@ -13,7 +13,7 @@ import tailwindStyles from "../index.css?inline";
 import supabase from "../supabaseClient";
 
 export const Widget = ({ projectId }) => {
-  const [rating, setRating] = useState(3);
+  const [rating, setRating] = useState(4);
   const [submitted, setSubmitted] = useState(false);
 
   const onSelectStar = (index) => {
@@ -48,7 +48,7 @@ export const Widget = ({ projectId }) => {
               Feedback
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="widget rounded-lg bg-card p-4 shadpw-lg w-full max-w-md">
+          <PopoverContent className="widget rounded-lg bg-card p-4 shadow-lg w-full max-w-md">
             <style>{tailwindStyles}</style>
             {submitted ? (
               <div>
