@@ -1,6 +1,10 @@
 import Stripe from "stripe";
 import { stripe } from "@/lib/stripe";
-import { createSubscription, cancelSubscription } from "@/actions/userSubscriptions";
+import {
+  createSubscription,
+  cancelSubscription,
+} from "@/actions/userSubscriptions";
+import { log } from "console";
 
 const relevantEvents = new Set([
   "checkout.session.completed",
@@ -17,31 +21,54 @@ export async function POST(req: Request) {
       : process.env.STRIPE_WEBHOOK_LOCAL_SECRET;
 
   if (!webHookSecret) {
+    console.error("Webhook secret not set");
     return new Response("Webhook secret not set", { status: 400 });
   }
 
   if (!sig) {
+    console.error("No signature in request");
     return new Response("No signature", { status: 400 });
   }
 
-  const event = stripe.webhooks.constructEvent(body, sig, webHookSecret);
-
-  const data = event.data.object as Stripe.Subscription;
-
-  if (relevantEvents.has(event.type)) {
-    if (event.type === "customer.subscription.created") {
-      const { customer } = data;
-      await createSubscription({ stripeCustomerId: customer as string });
-    } else if (event.type === "customer.subscription.deleted") {
-      const { customer } = data;
-      await cancelSubscription({ stripeCustomerId: customer as string });
-    }
+  let event;
+  try {
+    // Verify the webhook signature
+    event = stripe.webhooks.constructEvent(body, sig, webHookSecret);
+  } catch (error) {
+    console.error("Error verifying webhook signature:", error);
+    return new Response("Signature verification failed", { status: 400 });
   }
 
-  return new Response(
-    JSON.stringify({
-      received: true,
-    }),
-    { status: 200 }
-  );
+  try {
+    console.log("Received event:", event.type);
+    const data = event.data.object as Stripe.Subscription;
+
+    if (relevantEvents.has(event.type)) {
+      if (event.type === "customer.subscription.created") {
+        console.log(
+          "Processing customer.subscription.created for:",
+          data.customer
+        );
+        await createSubscription({ stripeCustomerId: data.customer as string });
+      } else if (event.type === "customer.subscription.deleted") {
+        console.log(
+          "Processing customer.subscription.deleted for:",
+          data.customer
+        );
+        await cancelSubscription({ stripeCustomerId: data.customer as string });
+      }
+    } else {
+      console.log("Unhandled event type:", event.type);
+    }
+
+    return new Response(
+      JSON.stringify({
+        received: true,
+      }),
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Error processing the event:", error);
+    return new Response("Internal Server Error", { status: 500 });
+  }
 }
