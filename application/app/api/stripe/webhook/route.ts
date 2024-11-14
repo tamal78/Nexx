@@ -4,7 +4,6 @@ import {
   createSubscription,
   cancelSubscription,
 } from "@/actions/userSubscriptions";
-import { log } from "console";
 
 const relevantEvents = new Set([
   "checkout.session.completed",
@@ -12,8 +11,13 @@ const relevantEvents = new Set([
   "customer.subscription.deleted",
 ]);
 
+export const config = {
+  api: {
+    bodyParser: false, // Ensure raw body is used
+  },
+};
+
 export async function POST(req: Request) {
-  const body = await req.text();
   const sig = req.headers.get("stripe-signature") as string;
   const webHookSecret =
     process.env.NODE_ENV === "production"
@@ -32,8 +36,12 @@ export async function POST(req: Request) {
 
   let event;
   try {
+    const rawBody = await req.text();
+    console.log("Raw body length:", rawBody.length);
+    console.log("Received Stripe signature:", sig);
+
     // Verify the webhook signature
-    event = stripe.webhooks.constructEvent(body, sig, webHookSecret);
+    event = stripe.webhooks.constructEvent(rawBody, sig, webHookSecret);
   } catch (error) {
     console.error("Error verifying webhook signature:", error);
     return new Response("Signature verification failed", { status: 400 });
@@ -61,12 +69,7 @@ export async function POST(req: Request) {
       console.log("Unhandled event type:", event.type);
     }
 
-    return new Response(
-      JSON.stringify({
-        received: true,
-      }),
-      { status: 200 }
-    );
+    return new Response(JSON.stringify({ received: true }), { status: 200 });
   } catch (error) {
     console.error("Error processing the event:", error);
     return new Response("Internal Server Error", { status: 500 });
