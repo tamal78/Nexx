@@ -3,13 +3,16 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { subscriptions } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { log } from "console";
 
 export async function POST(req: Request) {
   const { price, quantity = 1 } = await req.json();
   const { userId } = auth();
 
   if (!userId) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+    });
   }
 
   const userSubscription = await db.query.subscriptions.findFirst({
@@ -46,7 +49,10 @@ export async function POST(req: Request) {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
   if (!customer?.id) {
-    return new Response(JSON.stringify({ error: "Failed to get a customer id" }), { status: 500 });
+    return new Response(
+      JSON.stringify({ error: "Failed to get a customer id" }),
+      { status: 500 }
+    );
   }
 
   try {
@@ -64,12 +70,20 @@ export async function POST(req: Request) {
     });
 
     if (session) {
-      return new Response(JSON.stringify({ sessionId: session.id }), { status: 200 });
+      return new Response(JSON.stringify({ sessionId: session.id }), {
+        status: 200,
+      });
     } else {
-      return new Response(JSON.stringify({ error: "Failed to create a session" }), { status: 500 });
+      return new Response(
+        JSON.stringify({ error: "Failed to create a session" }),
+        { status: 500 }
+      );
     }
   } catch (error) {
     console.error(error);
-    return new Response(JSON.stringify({ error: "Failed to create a session" }), { status: 500 });
+    return new Response(
+      JSON.stringify({ error: "Failed to create a session" }),
+      { status: 500 }
+    );
   }
 }
