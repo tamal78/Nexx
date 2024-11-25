@@ -7,7 +7,7 @@ export type PricingPlan = {
   isPopular: boolean;
   features: string[];
   url: string;
-}
+};
 
 export const pricingPlans: PricingPlan[] = [
   {
@@ -17,7 +17,7 @@ export const pricingPlans: PricingPlan[] = [
     isPopular: false,
     url: "/dashboard",
     features: [
-      "3 projects",
+      "4 projects",
       "Unlimited users",
       "2GB storage",
       "Priority support",
@@ -49,8 +49,7 @@ export const pricingPlans: PricingPlan[] = [
       "24/7 support",
     ],
   },
-]
-
+];
 
 const PricingSection = () => {
   return (
@@ -60,14 +59,12 @@ const PricingSection = () => {
         Flexible Pricing to Fit Your Needs
       </h2>
       <div className="mt-10 grid items-center grid-cols-1 gap-3 md:grid-cols-3 max-w-screen-xl">
-        {
-          pricingPlans.map((plan, index) => (
-            <PricingCard key={index} {...plan} />
-          ))
-        }
+        {pricingPlans.map((plan, index) => (
+          <PricingCard key={index} {...plan} />
+        ))}
       </div>
     </div>
-  )
-}
+  );
+};
 
 export default PricingSection;
